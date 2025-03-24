@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HALLAYM AI</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #74ebd5, #9face6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+    }
+    h1 {
+      color: white;
+      margin-top: 20px;
+    }
+    .chatbox {
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 500px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .messages {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 15px;
+      max-height: 65vh;
+    }
+    .message {
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 80%;
+      position: relative;
+      word-wrap: break-word;
+    }
+    .user {
+      align-self: flex-end;
+      background-color: #dcf8c6;
+    }
+    .bot {
+      align-self: flex-start;
+      background-color: #f1f0f0;
+    }
+    .input-area {
+      display: flex;
+    }
+    input {
+      flex-grow: 1;
+      padding: 10px;
+      border-radius: 10px 0 0 10px;
+      border: none;
+    }
+    button {
+      padding: 10px;
+      border: none;
+      background: #4a90e2;
+      color: white;
+      border-radius: 0 10px 10px 0;
+      cursor: pointer;
+    }
+    .media {
+      max-width: 100%;
+      margin-top: 5px;
+      border-radius: 10px;
+    }
+    .download {
+      font-size: 14px;
+      margin-left: 8px;
+      text-decoration: underline;
+      color: #4a90e2;
+      cursor: pointer;
+      display: block;
+    }
+    video {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+    .footer {
+      margin-top: 10px;
+      color: white;
+      font-size: 14px;
+    }
+    pre.code-block {
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 10px;
+      font-family: monospace;
+      white-space: pre-wrap;
+      position: relative;
+    }
+    .copy-btn {
+      margin-top: 10px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>HALLAYM AI</h1>
+  <div class="chatbox">
+    <div class="messages" id="messages"></div>
+    <div class="input-area">
+      <input type="text" id="userInput" placeholder="Savolingizni yozing..." />
+      <button onclick="sendMessage()">Yuborish</button>
+    </div>
+  </div>
+  <div class="footer">&copy; 2025 HALLAYM AI</div>
+
+  <script>
+    const qaPairs = [
+      {
+        triggers: ["salom"],
+        response: "Salom! Yaxshimisiz? Qanday yordam bera olaman?"
+      },
+      {
+        triggers: ["hallaym", "llc"],
+        response: "HALLAYM LLC - bu Yangi va hozirgi paytda ancha mashhurlashayotgan sayt! Hozirda uning loyihalari bo'yicha Google va Meta kompaniyalari ijoyib munosabat bildirishayapti va bundan tashqari hamkorlikni taklif qilishayapti."
+      },
+      {
+        triggers: ["bola", "rasm", "ber"],
+        response: "Mana siz so‘ragan rasm: <img src='media/boy.png' class='media'><br><a href='media/boy.png' download class='download'>⬇️ Yuklab olish</a>"
+      },
+      {
+  triggers: ["video", "ber", "yarat", "panda"],
+  response: "Mana siz xohlagan video: <br><video src='media/purple-and-white-simple-technology-youtube-video-intro_V8faLtnm.mp4' controls class='media'></video><br><a href='media/purple-and-white-simple-technology-youtube-video-intro_V8faLtnm.mp4' download class='download'>⬇️ Yuklab olish</a>"
+      },
+      {
+        triggers: ["html", "kod", "ber"],
+        response: `HTML kodni ber: Mana siz so‘ragan kod:<br><pre class='code-block' id='code-block'>&lt;html&gt;\n  &lt;head&gt;&lt;title&gt;Mening saytim&lt;/title&gt;&lt;/head&gt;\n  &lt;body&gt;\n    &lt;h1&gt;Salom, dunyo!&lt;/h1&gt;\n  &lt;/body&gt;\n&lt;/html&gt;</pre><button class='copy-btn' onclick='copyCode()'>Nusxa olish</button><br>Ushbu kodni nusxalab sinab ko‘ring va natijani biz bilan ulashing.`
+      }
+    ];
+
+    function sendMessage() {
+      const input = document.getElementById("userInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      appendMessage(text, "user");
+      input.value = "";
+
+      const botTyping = appendMessage("Yuborilyapti...", "bot");
+
+      setTimeout(() => {
+        botTyping.remove();
+        respondToInput(text.toLowerCase());
+      }, 600);
+    }
+
+    function respondToInput(text) {
+      const scores = qaPairs.map(pair => {
+        const score = pair.triggers.filter(trigger => text.includes(trigger)).length;
+        return { ...pair, score };
+      }).sort((a, b) => b.score - a.score);
+
+      const bestMatch = scores[0];
+      if (bestMatch.score > 0) {
+        appendAnimatedHTML(bestMatch.response);
+      } else {
+        appendAnimatedText("Kechirasiz, bu haqida ma'lumot topilmadi.", "bot");
+      }
+    }
+
+    function appendMessage(text, sender) {
+      const msgBox = document.getElementById("messages");
+      const msg = document.createElement("div");
+      msg.className = "message " + sender;
+      msg.innerText = text;
+      msgBox.appendChild(msg);
+      msgBox.scrollTop = msgBox.scrollHeight;
+      return msg;
+    }
+
+    function appendAnimatedText(text, sender) {
+      const msgBox = document.getElementById("messages");
+      const msg = document.createElement("div");
+      msg.className = "message " + sender;
+      msgBox.appendChild(msg);
+      let i = 0;
+      const interval = setInterval(() => {
+        if (i < text.length) {
+          msg.textContent += text.charAt(i);
+          i++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 30);
+      msgBox.scrollTop = msgBox.scrollHeight;
+    }
+
+    function appendAnimatedHTML(html) {
+      const container = document.createElement("div");
+      container.className = "message bot";
+      document.getElementById("messages").appendChild(container);
+      let i = 0;
+      const temp = document.createElement("div");
+      temp.innerHTML = html;
+      const raw = temp.textContent;
+      const interval = setInterval(() => {
+        if (i < raw.length) {
+          container.textContent += raw.charAt(i);
+          i++;
+        } else {
+          clearInterval(interval);
+          container.innerHTML = html;
+          document.getElementById("messages").scrollTop = document.getElementById("messages").scrollHeight;
+        }
+      }, 10);
+    }
+
+    function copyCode() {
+      const code = document.getElementById("code-block").innerText;
+      navigator.clipboard.writeText(code);
+      const btn = document.querySelector(".copy-btn");
+      btn.innerText = "✅ Nusxa olindi";
+      setTimeout(() => btn.innerText = "Nusxa olish", 2000);
+    }
+
+    document.getElementById("userInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>
